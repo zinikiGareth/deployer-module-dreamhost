@@ -83,7 +83,7 @@ func (de *DreamhostEnv) FindRecord(ty, record string) (string, error) {
 		return "", err
 	}
 	for _, r := range all {
-		if r.Type == ty {
+		if r.Type == ty && r.Record == record {
 			return r.Value, nil
 		}
 	}
@@ -99,7 +99,7 @@ func (de *DreamhostEnv) InsertDNSRecord(record, ty, value string) error {
 	// log.Printf("#records = %d\n", len(current))
 	for _, r := range current {
 		if r.Type == "CNAME" && r.Record == record {
-			if value != r.Value && value+"." != r.Value {
+			if value != r.Value && value+"." != r.Value && value != r.Value+"." {
 				log.Printf("have %s but it has value %s, not %s\n", record, r.Value, value)
 				panic("need to be able to change value")
 			}
