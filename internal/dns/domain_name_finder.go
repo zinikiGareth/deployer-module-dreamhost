@@ -2,7 +2,6 @@ package dns
 
 import (
 	"fmt"
-	"log"
 
 	"ziniki.org/deployer/coremod/pkg/corebottom"
 	"ziniki.org/deployer/driver/pkg/driverbottom"
@@ -48,27 +47,11 @@ func (dnf *domainNameFinder) DetermineInitialState(pres corebottom.ValuePresente
 		panic("could not cast env to DreamhostEnv")
 	}
 
-	log.Printf("dhEnv = %p\n", dhEnv)
-
 	records, err := dhEnv.DNSRecordsFor(dnf.name)
-	// dnf.domainsClient = awsEnv.Route53DomainsClient()
-	// detail, err := dnf.domainsClient.GetDomainDetail(context.TODO(), &route53domains.GetDomainDetailInput{DomainName: &dnf.name})
 	if err != nil {
 		panic(err)
 	}
 
-	/*
-		var hzid string
-		for _, z := range zones.HostedZones {
-			if *z.Name == dnf.name+"." {
-				hzid = strings.Replace(*z.Id, "/hostedzone/", "", 1)
-				log.Printf("found zone %s: %s\n", hzid, *z.Name)
-			}
-		}
-		if hzid == "" {
-			log.Fatalf("No hosted zone found for " + dnf.name)
-		}
-	*/
 	model := CreateDomainModel(dnf.loc, records)
 	pres.Present(model)
 }

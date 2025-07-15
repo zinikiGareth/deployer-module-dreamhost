@@ -25,11 +25,13 @@ func RegisterWithDriver(deployer driverbottom.Driver) error {
 
 	// mytools := tools.RetrieveOther("coremod").(*corebottom.Tools)
 
-	// tools.Register.Register("target", "cloudfront.distribution.fromS3", cfront.NewWebsiteFromS3Handler(mytools))
+	tools.Register.Register("dns-asserter", "dreamhost", func(zone, k, v string) error {
+		return dns.AssertDNSRecord(tools, zone, k, v)
+	})
 
 	tools.Register.Register("blank", "dreamhost.DomainName", &dns.DomainNameBlank{})
 	// tools.Register.Register("blank", "aws.Route53.ALIAS", &route53.ALIASBlank{})
-	// tools.Register.Register("blank", "aws.Route53.CNAME", &route53.CNAMEBlank{})
+	tools.Register.Register("blank", "dreamhost.CNAME", &dns.CNAMEBlank{})
 	// tools.Register.Register("blank", "aws.CertificateManager.Certificate", &acm.CertificateBlank{})
 	// tools.Register.Register("blank", "aws.CloudFront.OriginAccessControl", &cfront.OACBlank{})
 	// tools.Register.Register("blank", "aws.CloudFront.ResponseHeadersPolicy", &cfront.RHPBlank{})
