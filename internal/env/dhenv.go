@@ -45,7 +45,7 @@ type DHActionResponse struct {
 }
 
 func (de *DreamhostEnv) DNSRecordsFor(zone string) ([]*DNSRecord, error) {
-	// log.Printf("finding records for zone %s\n", zone)
+	log.Printf("finding records for zone %s\n", zone)
 	client := &http.Client{}
 	req, err := http.NewRequest(http.MethodGet, de.assemble("dns-list_records"), nil)
 	if err != nil {
@@ -54,6 +54,7 @@ func (de *DreamhostEnv) DNSRecordsFor(zone string) ([]*DNSRecord, error) {
 
 	resp, err := client.Do(req.WithContext(context.TODO()))
 	if err != nil {
+		log.Printf("have error: %v\n", err)
 		io.Copy(os.Stderr, resp.Body)
 		resp.Body.Close()
 		return nil, fmt.Errorf("error from dreamhost API: %d %v", resp.StatusCode, err)
@@ -130,6 +131,60 @@ func (de *DreamhostEnv) InsertDNSRecord(record, ty, value string) error {
 	if err != nil {
 		return err
 	}
+	json.Unmarshal(d, &r)
+	if r.Result != "success" {
+		return fmt.Errorf("error from dreamhost API: %s", r.Data)
+	}
+
+	return nil
+}
+
+func (de *DreamhostEnv) DeleteDNSRecord(record, ty string) error {
+	// See if it's already there
+	current, err := de.DNSRecordsFor(record)
+	if err != nil {
+		return err
+	}
+
+	// log.Printf("#records = %d\n", len(current))
+	value := ""
+	for _, r := range current {
+		if r.Type == "CNAME" && r.Record == record {
+			log.Printf("matched %s %s %s\n", r.Type, r.Record, r.Value)
+			value = r.Value
+			break
+		}
+	}
+
+	if value == "" {
+		return nil
+	}
+
+	client := &http.Client{}
+	cmd := fmt.Sprintf("dns-remove_record&record=%s&type=%s&value=%s", record, ty, value)
+	// log.Printf("issuing command: %s\n", cmd)
+	req, err := http.NewRequest(http.MethodGet, de.assemble(cmd), nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req.WithContext(context.TODO()))
+	if err != nil {
+		io.Copy(os.Stderr, resp.Body)
+		resp.Body.Close()
+		return fmt.Errorf("error from dreamhost API: %d %v", resp.StatusCode, err)
+	}
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("dreamhost API returned error status: %d", resp.StatusCode)
+	}
+
+	var r DHActionResponse
+	d, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	// log.Printf("response was %s\n", d)
 	json.Unmarshal(d, &r)
 	if r.Result != "success" {
 		return fmt.Errorf("error from dreamhost API: %s", r.Data)

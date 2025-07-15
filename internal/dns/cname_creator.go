@@ -49,7 +49,7 @@ func (cc *cnameCreator) DetermineInitialState(pres corebottom.ValuePresenter) {
 	if err != nil {
 		panic(err)
 	}
-	log.Printf("points to %s\n", pointsTo)
+	// log.Printf("points to %s\n", pointsTo)
 
 	if pointsTo != "" {
 		pt, ok := utils.AsStringer(pointsTo)
@@ -70,8 +70,6 @@ func (cc *cnameCreator) DetermineDesiredState(pres corebottom.ValuePresenter) {
 		switch p.Id() {
 		case "PointsTo":
 			pointsTo = v
-		// case "Zone":
-		// 	zone = v
 		default:
 			cc.tools.Reporter.ReportAtf(cc.loc, "invalid property for IAM policy: %s", p.Id())
 			seenErr = true
@@ -81,8 +79,6 @@ func (cc *cnameCreator) DetermineDesiredState(pres corebottom.ValuePresenter) {
 		cc.tools.Reporter.ReportAtf(cc.loc, "no PointsTo property was specified for %s", cc.name)
 	}
 
-	// zoneId, ok := cc.tools.Storage.EvalAsStringer(zone)
-	// pt := pointsTo.Eval(cc.tools.Storage)
 	pt, ok := cc.tools.Storage.EvalAsStringer(pointsTo)
 	if !ok {
 		panic("not a stringer")
@@ -132,22 +128,16 @@ func (cc *cnameCreator) TearDown() {
 	log.Printf("need to remove a CNAME record for %s\n", cc.name)
 	log.Printf("found DH CNAME = %v\n", found)
 
-	// od, ok := found.pointsTo.(string)
-	// if !ok {
-	// 	str, ok := found.pointsTo.(fmt.Stringer)
-	// 	if !ok {
-	// 		log.Printf("pointsto was %T %p", found.pointsTo, found.pointsTo)
-	// 		panic("not a string or Stringer")
-	// 	}
-	// 	od = str.String()
-	// }
-	// var ttl int64 = 300
-	// changes := r53types.ResourceRecordSet{Name: &cc.name, Type: "CNAME", TTL: &ttl, ResourceRecords: []r53types.ResourceRecord{{Value: &od}}}
-	// cb := r53types.ChangeBatch{Changes: []r53types.Change{{Action: "DELETE", ResourceRecordSet: &changes}}}
-	// _, err := cc.client.ChangeResourceRecordSets(context.TODO(), &route53.ChangeResourceRecordSetsInput{HostedZoneId: &found.updateZoneId, ChangeBatch: &cb})
-	// if err != nil {
-	// 	panic(err)
-	// }
+	eq := cc.tools.Recall.ObtainDriver("dreamhost.DreamhostEnv")
+	dhEnv, ok := eq.(*env.DreamhostEnv)
+	if !ok {
+		panic("could not cast env to DreamhostEnv")
+	}
+
+	err := dhEnv.DeleteDNSRecord(found.name, "CNAME")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (cc *cnameCreator) String() string {
