@@ -21,7 +21,7 @@ type DreamhostEnv struct {
 func InitDreamhostEnv() *DreamhostEnv {
 	key := os.Getenv("DH_API_KEY")
 	if key == "" {
-		fmt.Printf("no DH_API_KEY env var set")
+		fmt.Printf("no DH_API_KEY env var set\n")
 		return nil
 	}
 	return &DreamhostEnv{apiKey: key}
