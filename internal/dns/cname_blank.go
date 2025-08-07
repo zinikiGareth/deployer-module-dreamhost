@@ -13,7 +13,7 @@ func (c *CNAMEBlank) ShortDescription() string {
 	return "dreamhost.CNAME[]"
 }
 
-func (c *CNAMEBlank) Find(tools *corebottom.Tools, loc *errorsink.Location, id corebottom.CoinId, named string) corebottom.FindCoin {
+func (c *CNAMEBlank) Find(tools *corebottom.Tools, loc *errorsink.Location, id corebottom.CoinId, named string, props map[driverbottom.Identifier]driverbottom.Expr) corebottom.FindCoin {
 	return &cnameCreator{tools: tools, loc: loc, name: named, coin: id}
 }
 
